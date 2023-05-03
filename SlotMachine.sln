@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SlotMachine.Console", "Slot
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SlotMachine.Core", "SlotMachine.Core\SlotMachine.Core.csproj", "{DD33336A-897A-4E6D-83BC-953769564FB7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SlotMachine.Tests", "SlotMachine.Tests\SlotMachine.Tests.csproj", "{16F04853-6807-459F-A615-C626A8BB8422}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{DD33336A-897A-4E6D-83BC-953769564FB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DD33336A-897A-4E6D-83BC-953769564FB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DD33336A-897A-4E6D-83BC-953769564FB7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16F04853-6807-459F-A615-C626A8BB8422}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16F04853-6807-459F-A615-C626A8BB8422}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16F04853-6807-459F-A615-C626A8BB8422}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16F04853-6807-459F-A615-C626A8BB8422}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

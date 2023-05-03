@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SlotMachine.Core.Models
 {
-    internal class Symbol
+    public class Symbol
     {
         public Symbol(string name, char displayValue, decimal coefficient, double probabilityPercent, bool isWildcard = false)
         {

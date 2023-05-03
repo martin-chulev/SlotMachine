@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SlotMachine.Core.Config
 {
-    internal static class Texts
+    public static class Texts
     {
         public const string ENTER_DEPOSIT_AMOUNT = "Please deposit money you would like to play with:";
         public const string ENTER_STAKE_AMOUNT = "Enter stake amount:";
