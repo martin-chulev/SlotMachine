@@ -1,0 +1,36 @@
+{
+  "Symbols": [
+    {
+      "Name": "Apple",
+      "Value": "A",
+      "Coefficient": 0.4,
+      "ProbabilityPercent": 45.0,
+      "IsWildcard": false
+    },
+    {
+      "Name": "Banana",
+      "Value": "B",
+      "Coefficient": 0.6,
+      "ProbabilityPercent": 35.0,
+      "IsWildcard": false
+    },
+    {
+      "Name": "Pineapple",
+      "Value": "P",
+      "Coefficient": 0.8,
+      "ProbabilityPercent": 15.0,
+      "IsWildcard": false
+    },
+    {
+      "Name": "Wildcard",
+      "Value": "*",
+      "Coefficient": 0.0,
+      "ProbabilityPercent": 5.0,
+      "IsWildcard": true
+    }
+  ],
+  "Rows": 4,
+  "SymbolsPerRow": 3,
+  "InputRetryAmount": null,
+  "RandomSeed": null
+}

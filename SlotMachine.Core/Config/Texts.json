@@ -1,0 +1,9 @@
+{
+  "EnterDepositAmount": "Please deposit money you would like to play with:",
+  "EnterStakeAmount": "Enter stake amount:",
+  "InvalidAmount": "Invalid amount specified.",
+  "InsufficientFunds": "Insufficient funds.",
+  "WonAmount": "You have won:",
+  "CurrentBalance": "Current balance is:",
+  "GameOver": "GAME OVER"
+}

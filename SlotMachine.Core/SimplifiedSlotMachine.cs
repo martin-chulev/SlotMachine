@@ -9,16 +9,21 @@ namespace SlotMachine.Core
         private readonly Func<string?> _textInput;
         private readonly Random _random;
 
+        private readonly Texts _texts;
+        private readonly GameSettings _gameSettings;
+
         /// <summary>
         /// Current available amount in the slot machine.
         /// </summary>
         public decimal Balance { get; set; }
 
-        public SimplifiedSlotMachine(Action<string?> textOutput, Func<string?> textInput)
+        public SimplifiedSlotMachine(Action<string?> textOutput, Func<string?> textInput, Texts texts, GameSettings gameSettings)
         {
             _textOutput = textOutput;
             _textInput = textInput;
-            _random = GameSettings.RandomSeed != null ? new Random(GameSettings.RandomSeed.Value) : new Random();
+            _texts = texts;
+            _gameSettings = gameSettings;
+            _random = _gameSettings.RandomSeed != null ? new Random(_gameSettings.RandomSeed.Value) : new Random();
         }
 
         #region Input
@@ -28,7 +33,7 @@ namespace SlotMachine.Core
         /// <returns>The deposited amount.</returns>
         public decimal RequestDeposit()
         {
-            return RequestMoneyAmount(Texts.ENTER_DEPOSIT_AMOUNT, Texts.INVALID_AMOUNT);
+            return RequestMoneyAmount(_texts.EnterDepositAmount, _texts.InvalidAmount);
         }
 
         /// <summary>
@@ -37,19 +42,19 @@ namespace SlotMachine.Core
         /// <returns>The staked amount.</returns>
         public decimal RequestStake()
         {
-            decimal stake = RequestMoneyAmount(Texts.ENTER_STAKE_AMOUNT, Texts.INVALID_AMOUNT);
+            decimal stake = RequestMoneyAmount(_texts.EnterStakeAmount, _texts.InvalidAmount);
 
             int retryCount = 1;
             while (stake > Balance)
             {
-                _textOutput?.Invoke(Texts.INSUFFICIENT_FUNDS);
+                _textOutput?.Invoke(_texts.InsufficientFunds);
 
-                if (GameSettings.InputRetryAmount != null && retryCount > GameSettings.InputRetryAmount)
+                if (_gameSettings.InputRetryAmount != null && retryCount > _gameSettings.InputRetryAmount)
                 {
                     return 0m;
                 }
 
-                stake = RequestMoneyAmount(Texts.ENTER_STAKE_AMOUNT, Texts.INVALID_AMOUNT);
+                stake = RequestMoneyAmount(_texts.EnterStakeAmount, _texts.InvalidAmount);
                 ++retryCount;
             }
 
@@ -62,7 +67,7 @@ namespace SlotMachine.Core
         /// <param name="requestText">Text which prompts the user what to enter.</param>
         /// <param name="errorText">Text to display in case of invalid input.</param>
         /// <returns>The parsed valid amount or 0 in case the retry count was exceeded.</returns>
-        private decimal RequestMoneyAmount(string requestText, string errorText)
+        private decimal RequestMoneyAmount(string? requestText, string? errorText)
         {
             decimal amount;
 
@@ -76,7 +81,7 @@ namespace SlotMachine.Core
                 
                 ++retryCount;
 
-                if (GameSettings.InputRetryAmount != null && retryCount > GameSettings.InputRetryAmount)
+                if (_gameSettings.InputRetryAmount != null && retryCount > _gameSettings.InputRetryAmount)
                 {
                     return 0m;
                 }
@@ -113,12 +118,12 @@ namespace SlotMachine.Core
                 var result = Spin(stakeAmount);
                 Balance += result;
 
-                _textOutput?.Invoke($"{Texts.WON_AMOUNT} {result:F2}");
-                _textOutput?.Invoke($"{Texts.CURRENT_BALANCE} {Balance:F2}");
+                _textOutput?.Invoke($"{_texts.WonAmount} {result:F2}");
+                _textOutput?.Invoke($"{_texts.CurrentBalance} {Balance:F2}");
                 _textOutput?.Invoke(string.Empty);
             }
 
-            _textOutput?.Invoke(Texts.GAME_OVER);
+            _textOutput?.Invoke(_texts.GameOver);
         }
 
         /// <summary>
@@ -132,10 +137,10 @@ namespace SlotMachine.Core
 
             _textOutput?.Invoke(string.Empty);
 
-            for (int rowIndex = 0; rowIndex < GameSettings.Rows; rowIndex++)
+            for (int rowIndex = 0; rowIndex < _gameSettings.Rows; rowIndex++)
             {
-                var row = new Symbol[GameSettings.SymbolsPerRow];
-                for (int colIndex = 0; colIndex < GameSettings.SymbolsPerRow; colIndex++)
+                var row = new Symbol[_gameSettings.SymbolsPerRow];
+                for (int colIndex = 0; colIndex < _gameSettings.SymbolsPerRow; colIndex++)
                 {
                     row[colIndex] = GetRandomSymbol();
                 }
@@ -163,15 +168,15 @@ namespace SlotMachine.Core
             var randomNumber = _random.Next(0, 100);
 
             double iterator = 0d;
-            for (int i = 0; i < GameSettings.Symbols.Length; i++)
+            for (int i = 0; i < _gameSettings.Symbols.Length; i++)
             {
-                if (randomNumber < iterator + GameSettings.Symbols[i].ProbabilityPercent)
+                if (randomNumber < iterator + _gameSettings.Symbols[i].ProbabilityPercent)
                 {
-                    return GameSettings.Symbols[i];
+                    return _gameSettings.Symbols[i];
                 }
                 else
                 {
-                    iterator += GameSettings.Symbols[i].ProbabilityPercent;
+                    iterator += _gameSettings.Symbols[i].ProbabilityPercent;
                 }
             }
 

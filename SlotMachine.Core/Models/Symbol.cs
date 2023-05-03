@@ -8,17 +8,17 @@ namespace SlotMachine.Core.Models
 {
     public class Symbol
     {
-        public Symbol(string name, char displayValue, decimal coefficient, double probabilityPercent, bool isWildcard = false)
+        public Symbol(string name, string value, decimal coefficient, double probabilityPercent, bool isWildcard = false)
         {
             Name = name;
-            Value = displayValue;
+            Value = value;
             Coefficient = coefficient;
             ProbabilityPercent = probabilityPercent;
             IsWildcard = isWildcard;
         }
 
         public string Name { get; }
-        public char Value { get; }
+        public string Value { get; }
         public decimal Coefficient { get; }
         public double ProbabilityPercent { get; }
         public bool IsWildcard { get; }

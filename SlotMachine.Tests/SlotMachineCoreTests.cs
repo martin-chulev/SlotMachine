@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using SlotMachine.Core;
 using SlotMachine.Core.Config;
 using SlotMachine.Core.Models;
@@ -7,9 +8,14 @@ namespace SlotMachine.Tests
 {
     public class SlotMachineCoreTests
     {
+        private readonly Texts _texts;
+        private readonly GameSettings _gameSettings;
+
         public SlotMachineCoreTests()
         {
-            GameSettings.InputRetryAmount = 0;
+            _gameSettings = JsonConvert.DeserializeObject<GameSettings>(File.ReadAllText("Config/GameSettings.json")) ?? new();
+            _texts = JsonConvert.DeserializeObject<Texts>(File.ReadAllText("Config/Texts.json")) ?? new();
+            _gameSettings.InputRetryAmount = 0;
         }
 
         #region Deposit
@@ -19,7 +25,7 @@ namespace SlotMachine.Tests
         [InlineData(123456789)]
         public void ShouldAcceptValidDeposit(decimal depositAmount)
         {
-            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => depositAmount.ToString());
+            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => depositAmount.ToString(), _texts, _gameSettings);
 
             var result = slotMachine.RequestDeposit();
 
@@ -34,11 +40,11 @@ namespace SlotMachine.Tests
         public void ShouldShowErrorOnInvalidDepositAmount(decimal depositAmount)
         {
             var outputList = new List<string?>();
-            var slotMachine = new SimplifiedSlotMachine((text) => outputList.Add(text), () => depositAmount.ToString());
+            var slotMachine = new SimplifiedSlotMachine((text) => outputList.Add(text), () => depositAmount.ToString(), _texts, _gameSettings);
 
             var result = slotMachine.RequestDeposit();
 
-            Assert.Contains(Texts.INVALID_AMOUNT, outputList);
+            Assert.Contains(_texts.InvalidAmount, outputList);
         }
 
         [Theory]
@@ -48,7 +54,7 @@ namespace SlotMachine.Tests
         [InlineData(-123456789, 1)]
         public void ShouldRetryOnInvalidDepositAmount(decimal depositAmount1, decimal depositAmount2)
         {
-            GameSettings.InputRetryAmount = 1;
+            _gameSettings.InputRetryAmount = 1;
             var outputList = new List<string?>();
 
             var currentDepositAmount = depositAmount1;
@@ -59,12 +65,14 @@ namespace SlotMachine.Tests
                     var result = currentDepositAmount.ToString(); 
                     currentDepositAmount = depositAmount2;
                     return result;
-                }
+                }, 
+                _texts, 
+                _gameSettings
             );
 
             var result = slotMachine.RequestDeposit();
 
-            Assert.Contains(Texts.INVALID_AMOUNT, outputList);
+            Assert.Contains(_texts.InvalidAmount, outputList);
             Assert.Equal(depositAmount2, result);
         }
 
@@ -76,11 +84,11 @@ namespace SlotMachine.Tests
         public void ShouldShowErrorOnInvalidDepositInput(string depositInput)
         {
             var outputList = new List<string?>();
-            var slotMachine = new SimplifiedSlotMachine((text) => outputList.Add(text), () => depositInput);
+            var slotMachine = new SimplifiedSlotMachine((text) => outputList.Add(text), () => depositInput, _texts, _gameSettings);
 
             var result = slotMachine.RequestDeposit();
 
-            Assert.Contains(Texts.INVALID_AMOUNT, outputList);
+            Assert.Contains(_texts.InvalidAmount, outputList);
         }
         #endregion
 
@@ -91,7 +99,7 @@ namespace SlotMachine.Tests
         [InlineData(1000000000, 123456789)]
         public void ShouldAcceptValidStake(decimal balance, decimal stakeAmount)
         {
-            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => stakeAmount.ToString());
+            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => stakeAmount.ToString(), _texts, _gameSettings);
             slotMachine.Balance = balance;
 
             var result = slotMachine.RequestStake();
@@ -107,11 +115,11 @@ namespace SlotMachine.Tests
         public void ShouldShowErrorOnInvalidStakeAmount(decimal stakeAmount)
         {
             var outputList = new List<string?>();
-            var slotMachine = new SimplifiedSlotMachine((text) => outputList.Add(text), () => stakeAmount.ToString());
+            var slotMachine = new SimplifiedSlotMachine((text) => outputList.Add(text), () => stakeAmount.ToString(), _texts, _gameSettings);
 
             var result = slotMachine.RequestStake();
 
-            Assert.Contains(Texts.INVALID_AMOUNT, outputList);
+            Assert.Contains(_texts.InvalidAmount, outputList);
         }
 
         [Theory]
@@ -122,11 +130,11 @@ namespace SlotMachine.Tests
         public void ShouldShowErrorOnInvalidStakeInput(string stakeInput)
         {
             var outputList = new List<string?>();
-            var slotMachine = new SimplifiedSlotMachine((text) => outputList.Add(text), () => stakeInput);
+            var slotMachine = new SimplifiedSlotMachine((text) => outputList.Add(text), () => stakeInput, _texts, _gameSettings);
 
             var result = slotMachine.RequestStake();
 
-            Assert.Contains(Texts.INVALID_AMOUNT, outputList);
+            Assert.Contains(_texts.InvalidAmount, outputList);
         }
 
         [Theory]
@@ -136,12 +144,12 @@ namespace SlotMachine.Tests
         public void ShouldShowErrorOnInsufficientStakeFunds(decimal balance, decimal stakeAmount)
         {
             var outputList = new List<string?>();
-            var slotMachine = new SimplifiedSlotMachine((text) => outputList.Add(text), () => stakeAmount.ToString());
+            var slotMachine = new SimplifiedSlotMachine((text) => outputList.Add(text), () => stakeAmount.ToString(), _texts, _gameSettings);
             slotMachine.Balance = balance;
 
             var result = slotMachine.RequestStake();
 
-            Assert.Contains(Texts.INSUFFICIENT_FUNDS, outputList);
+            Assert.Contains(_texts.InsufficientFunds, outputList);
         }
 
         [Theory]
@@ -151,7 +159,7 @@ namespace SlotMachine.Tests
         [InlineData(-123456789, 1)]
         public void ShouldRetryOnInvalidStakeAmount(decimal stakeAmount1, decimal stakeAmount2)
         {
-            GameSettings.InputRetryAmount = 1;
+            _gameSettings.InputRetryAmount = 1;
             var outputList = new List<string?>();
 
             var currentStakeAmount = stakeAmount1;
@@ -162,13 +170,15 @@ namespace SlotMachine.Tests
                     var result = currentStakeAmount.ToString();
                     currentStakeAmount = stakeAmount2;
                     return result;
-                }
+                }, 
+                _texts, 
+                _gameSettings
             );
             slotMachine.Balance = decimal.MaxValue;
 
             var result = slotMachine.RequestStake();
 
-            Assert.Contains(Texts.INVALID_AMOUNT, outputList);
+            Assert.Contains(_texts.InvalidAmount, outputList);
             Assert.Equal(stakeAmount2, result);
         }
 
@@ -178,7 +188,7 @@ namespace SlotMachine.Tests
         [InlineData(100000000, 123456789, 1)]
         public void ShouldRetryOnInsufficientStakeFunds(decimal balance, decimal stakeAmount1, decimal stakeAmount2)
         {
-            GameSettings.InputRetryAmount = 1;
+            _gameSettings.InputRetryAmount = 1;
             var outputList = new List<string?>();
 
             var currentStakeAmount = stakeAmount1;
@@ -189,13 +199,15 @@ namespace SlotMachine.Tests
                     var result = currentStakeAmount.ToString();
                     currentStakeAmount = stakeAmount2;
                     return result;
-                }
+                }, 
+                _texts, 
+                _gameSettings
             );
             slotMachine.Balance = balance;
 
             var result = slotMachine.RequestStake();
 
-            Assert.Contains(Texts.INSUFFICIENT_FUNDS, outputList);
+            Assert.Contains(_texts.InsufficientFunds, outputList);
             Assert.Equal(stakeAmount2, result);
         }
         #endregion
@@ -205,32 +217,32 @@ namespace SlotMachine.Tests
         public void ShouldNotSpinWithZeroBalance()
         {
             var outputList = new List<string?>();
-            var slotMachine = new SimplifiedSlotMachine((text) => outputList.Add(text), () => "100");
+            var slotMachine = new SimplifiedSlotMachine((text) => outputList.Add(text), () => "100", _texts, _gameSettings);
             slotMachine.Balance = 0;
             slotMachine.StartSpinning();
 
             Assert.Single(outputList);
-            Assert.Contains(Texts.GAME_OVER, outputList);
+            Assert.Contains(_texts.GameOver, outputList);
         }
 
         [Fact]
         public void ShouldStopSpinningWithZeroBalance()
         {
-            GameSettings.RandomSeed = 20;
+            _gameSettings.RandomSeed = 20;
             var outputList = new List<string?>();
-            var slotMachine = new SimplifiedSlotMachine((text) => outputList.Add(text), () => "100");
+            var slotMachine = new SimplifiedSlotMachine((text) => outputList.Add(text), () => "100", _texts, _gameSettings);
             slotMachine.Balance = 100;
             slotMachine.StartSpinning();
 
-            Assert.Equal(1, outputList.Count(output => output == Texts.ENTER_STAKE_AMOUNT));
-            Assert.Equal(1, outputList.Count(output => output == Texts.GAME_OVER));
+            Assert.Equal(1, outputList.Count(output => output == _texts.EnterStakeAmount));
+            Assert.Equal(1, outputList.Count(output => output == _texts.GameOver));
         }
 
         [Fact]
         public void LosingSpinShouldReturnZero()
         {
-            GameSettings.RandomSeed = 20;
-            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => string.Empty);
+            _gameSettings.RandomSeed = 20;
+            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => string.Empty, _texts, _gameSettings);
             var result = slotMachine.Spin(100);
 
             Assert.Equal(0, result);
@@ -239,8 +251,8 @@ namespace SlotMachine.Tests
         [Fact]
         public void WinningSpinShouldReturnCorrectProfit()
         {
-            GameSettings.RandomSeed = 40;
-            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => string.Empty);
+            _gameSettings.RandomSeed = 40;
+            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => string.Empty, _texts, _gameSettings);
             var result = slotMachine.Spin(40);
 
             Assert.Equal(72, result);
@@ -249,8 +261,8 @@ namespace SlotMachine.Tests
         [Fact]
         public void WinningSpinWithWildcardShouldReturnCorrectProfit()
         {
-            GameSettings.RandomSeed = 30;
-            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => string.Empty);
+            _gameSettings.RandomSeed = 30;
+            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => string.Empty, _texts, _gameSettings);
             var result = slotMachine.Spin(30);
 
             Assert.Equal(36, result);
@@ -262,29 +274,29 @@ namespace SlotMachine.Tests
         [InlineData(30)]
         public void ShouldGenerateRandomSymbol(int seed)
         {
-            GameSettings.RandomSeed = seed;
-            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => string.Empty);
+            _gameSettings.RandomSeed = seed;
+            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => string.Empty, _texts, _gameSettings);
             
             Symbol symbol1 = slotMachine.GetRandomSymbol();
             Symbol symbol2 = slotMachine.GetRandomSymbol();
             Symbol symbol3 = slotMachine.GetRandomSymbol();
 
-            Assert.Contains(symbol1, GameSettings.Symbols);
-            Assert.Contains(symbol2, GameSettings.Symbols);
-            Assert.Contains(symbol3, GameSettings.Symbols);
+            Assert.Contains(symbol1, _gameSettings.Symbols);
+            Assert.Contains(symbol2, _gameSettings.Symbols);
+            Assert.Contains(symbol3, _gameSettings.Symbols);
             Assert.NotEqual(symbol1, symbol2);
         }
 
         [Fact]
         public void MatchingRowShouldBeWinning()
         {
-            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => string.Empty);
+            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => string.Empty, _texts, _gameSettings);
 
             var row = new Symbol[]
             {
-                new Symbol("Apple", 'A', 0.4m, 45),
-                new Symbol("Apple", 'A', 0.4m, 45),
-                new Symbol("Apple", 'A', 0.4m, 45)
+                new Symbol("Apple", "A", 0.4m, 45),
+                new Symbol("Apple", "A", 0.4m, 45),
+                new Symbol("Apple", "A", 0.4m, 45)
             };
 
             Assert.True(slotMachine.RowIsWinning(row));
@@ -293,13 +305,13 @@ namespace SlotMachine.Tests
         [Fact]
         public void MatchingRowWithWildcardShouldBeWinning()
         {
-            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => string.Empty);
+            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => string.Empty, _texts, _gameSettings);
 
             var row = new Symbol[]
             {
-                new Symbol("Apple", 'A', 0.4m, 45),
-                new Symbol("Apple", 'A', 0.4m, 45),
-                new Symbol("Wildcard", '*', 0m, 5, isWildcard: true)
+                new Symbol("Apple", "A", 0.4m, 45),
+                new Symbol("Apple", "A", 0.4m, 45),
+                new Symbol("Wildcard", "*", 0m, 5, isWildcard: true)
             };
 
             Assert.True(slotMachine.RowIsWinning(row));
@@ -308,13 +320,13 @@ namespace SlotMachine.Tests
         [Fact]
         public void NonMatchingRowShouldBeLosing()
         {
-            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => string.Empty);
+            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => string.Empty, _texts, _gameSettings);
 
             var row = new Symbol[]
             {
-                new Symbol("Apple", 'A', 0.4m, 45),
-                new Symbol("Banana", 'B', 0.6m, 35),
-                new Symbol("Apple", 'A', 0.4m, 45)
+                new Symbol("Apple", "A", 0.4m, 45),
+                new Symbol("Banana", "B", 0.6m, 35),
+                new Symbol("Apple", "A", 0.4m, 45)
             };
 
             Assert.False(slotMachine.RowIsWinning(row));
@@ -323,13 +335,13 @@ namespace SlotMachine.Tests
         [Fact]
         public void NonMatchingRowWithWildcardShouldBeLosing()
         {
-            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => string.Empty);
+            var slotMachine = new SimplifiedSlotMachine((text) => { }, () => string.Empty, _texts, _gameSettings);
 
             var row = new Symbol[]
             {
-                new Symbol("Apple", 'A', 0.4m, 45),
-                new Symbol("Banana", 'B', 0.6m, 35),
-                new Symbol("Wildcard", '*', 0m, 5, isWildcard: true)
+                new Symbol("Apple", "A", 0.4m, 45),
+                new Symbol("Banana", "B", 0.6m, 35),
+                new Symbol("Wildcard", "*", 0m, 5, isWildcard: true)
             };
 
             Assert.False(slotMachine.RowIsWinning(row));
